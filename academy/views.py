@@ -405,10 +405,19 @@ def get_universes_list(fal, request):
     project_id = request.GET.get("project")
     project = Exercise.objects.get(exercise_id=project_id)
 
-    universes_list = list(
-        ExerciseUniverses.objects.filter(exercise=project)
-        .order_by("-is_default")
-        .values_list("universe__name", flat=True)
+    universes_list = []
+
+    proj_univs = project.universes.all()
+
+    default_universes = dict(
+        ExerciseUniverses.objects.filter(exercise=project).values_list(
+            "universe_id", "is_default"
+        )
+    )
+
+    proj_univs = sorted(
+        proj_univs,
+        key=lambda univ: not default_universes.get(univ.id, False),
     )
 
     return Response({"universes_list": universes_list})
